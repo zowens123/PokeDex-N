@@ -27,6 +27,7 @@ test.html       Pokédex + New Relic browser agent (public)
 
 css/style.css   Design system: tokens, primitives, components
 js/analytics.js Pendo Track Events (no-ops when the agent isn't loaded)
+js/analytics.js Novus by Pendo: boot, identify, and sign-out reset
 js/auth.js      Session handling and route guards
 js/demo-users.js Demo credential seed (development only)
 js/login.js     Login form validation and submission

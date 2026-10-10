@@ -211,6 +211,9 @@
 			// Tracked first: the redirect leaves the page immediately.
 			const redirectTarget = PokeDex.auth.getRedirectTarget();
 			trackSignInSucceeded(result.user || {}, redirectTarget);
+			// Identify at the moment of sign-in; later pages re-identify from
+			// the stored session (see analytics.js).
+			if (PokeDex.analytics) PokeDex.analytics.identify(result.user);
 
 			// Replace rather than assign: the login page shouldn't sit in the
 			// back-stack once the visitor is through it.

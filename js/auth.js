@@ -185,6 +185,8 @@
 			}
 
 			clearSession();
+			// Don't let the next person on this device inherit this visitor.
+			if (PokeDex.analytics) PokeDex.analytics.clearSession();
 			if (redirectTo !== false) {
 				global.location.href = redirectTo || "login.html";
 			}
