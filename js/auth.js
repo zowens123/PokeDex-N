@@ -47,6 +47,11 @@
 		}
 	}
 
+	// "Keep me signed in" is what puts the session in localStorage.
+	function isRemembered() {
+		return Boolean(safeRead(global.localStorage));
+	}
+
 	function readSession() {
 		const raw = safeRead(global.localStorage) || safeRead(global.sessionStorage);
 		if (!raw) return null;
@@ -65,6 +70,15 @@
 		}
 
 		if (Date.now() > session.expiresAt) {
+			// Recorded before clearSession() wipes the context. Deferred, since
+			// this usually runs in <head> right before requireAuth() redirects,
+			// which would drop a direct track call.
+			PokeDex.analytics.trackWhenReady("session_expired", {
+				role: session.user.role,
+				sessionAgeMs: Date.now() - session.issuedAt,
+				remember: isRemembered(),
+				page: PokeDex.analytics.currentPage(),
+			});
 			clearSession();
 			return null;
 		}
@@ -158,6 +172,18 @@
 		},
 
 		signOut: function (redirectTo) {
+			// Read before clearing. A session that has already expired reports
+			// session_expired from readSession() instead.
+			const session = readSession();
+			if (session) {
+				PokeDex.analytics.track("user_signed_out", {
+					role: session.user.role,
+					sessionDurationMs: Date.now() - session.issuedAt,
+					remember: isRemembered(),
+					page: PokeDex.analytics.currentPage(),
+				});
+			}
+
 			clearSession();
 			// Don't let the next person on this device inherit this visitor.
 			if (PokeDex.analytics) PokeDex.analytics.clearSession();

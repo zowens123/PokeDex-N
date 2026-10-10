@@ -20,6 +20,7 @@
 	const CONCURRENCY = 8;
 	const CACHE_KEY = "pokedex.cache.v1";
 	const STAT_SCALE = 180; // visual ceiling for stat bars, not a real max
+	const SEARCH_SETTLE_MS = 1000; // pause before a search counts as settled
 
 	/* --- element refs ------------------------------------------------------ */
 
@@ -40,6 +41,7 @@
 	const cardsById = new Map();
 	let searchTerm = "";
 	let typeFilter = "";
+	let loadAttempts = 0; // the initial load, plus each "Try again"
 
 	/* --- helpers ----------------------------------------------------------- */
 
@@ -67,7 +69,11 @@
 
 	async function fetchJson(url) {
 		const res = await fetch(url);
-		if (!res.ok) throw new Error("Request failed (" + res.status + ") for " + url);
+		if (!res.ok) {
+			const err = new Error("Request failed (" + res.status + ") for " + url);
+			err.status = res.status; // reported as httpStatus by the failure events
+			throw err;
+		}
 		return res.json();
 	}
 
@@ -221,6 +227,7 @@
 		);
 	}
 
+	// Returns how many cards are left showing.
 	function applyFilters() {
 		let visible = 0;
 
@@ -235,6 +242,7 @@
 
 		emptyStateEl.classList.toggle("hidden", visible > 0);
 		countEl.textContent = visible + " of " + pokemon.length;
+		return visible;
 	}
 
 	function populateTypeFilter() {
@@ -433,10 +441,34 @@
 
 	async function selectPokemon(id) {
 		try {
+			const requestedAt = global.performance.now();
 			const detail = await fetchJson(API_BASE + "/pokemon/" + id);
+			const loadTimeMs = Math.round(global.performance.now() - requestedAt);
 			showDetail(detail);
+
+			const types = detail.types.map(function (slot) {
+				return slot.type.name;
+			});
+			PokeDex.analytics.track("pokemon_details_viewed", {
+				pokemonId: detail.id,
+				pokemonName: detail.name,
+				pokemonTypes: types,
+				primaryType: types[0],
+				baseExperience: detail.base_experience,
+				searchTerm: searchTerm,
+				typeFilter: typeFilter || "all",
+				loadTimeMs: loadTimeMs,
+				page: PokeDex.analytics.currentPage(),
+			});
 		} catch (err) {
 			global.console.error(err);
+			PokeDex.analytics.track("pokemon_details_load_failed", {
+				pokemonId: id,
+				errorMessage: err && err.message,
+				httpStatus: err && err.status,
+				online: global.navigator.onLine,
+				page: PokeDex.analytics.currentPage(),
+			});
 			global.alert("Couldn't load that Pokémon. Please try again.");
 		}
 	}
@@ -476,6 +508,7 @@
 	}
 
 	async function load() {
+		loadAttempts++;
 		errorStateEl.classList.add("hidden");
 		emptyStateEl.classList.add("hidden");
 		renderSkeletons(24);
@@ -502,6 +535,13 @@
 			await hydrateTypes();
 		} catch (err) {
 			global.console.error(err);
+			PokeDex.analytics.track("pokedex_load_failed", {
+				errorMessage: err && err.message,
+				httpStatus: err && err.status,
+				attemptNumber: loadAttempts,
+				online: global.navigator.onLine,
+				page: PokeDex.analytics.currentPage(),
+			});
 			showError("The PokéAPI request failed. Check your connection and try again.");
 		}
 	}
@@ -516,17 +556,53 @@
 	});
 
 	let searchTimer = null;
+	let searchReportTimer = null;
+	let lastReportedSearch = "";
+
+	// The grid filters as you type, but a search is only reported once the
+	// term settles, so the partial queries along the way ("p", "pi", "pik"…)
+	// aren't logged. Cleared searches and back-to-back repeats are skipped.
+	function scheduleSearchReport(resultCount) {
+		const term = searchTerm;
+		const properties = {
+			searchTerm: term,
+			searchType: /^#?\d+$/.test(term) ? "number" : "name",
+			resultCount: resultCount,
+			totalCount: pokemon.length,
+			typeFilter: typeFilter || "all",
+			page: PokeDex.analytics.currentPage(),
+		};
+
+		searchReportTimer = global.setTimeout(function () {
+			if (term === lastReportedSearch) return;
+			lastReportedSearch = term;
+			if (term) PokeDex.analytics.track("pokedex_searched", properties);
+		}, SEARCH_SETTLE_MS);
+	}
+
 	searchEl.addEventListener("input", function () {
 		global.clearTimeout(searchTimer);
+		global.clearTimeout(searchReportTimer);
 		searchTimer = global.setTimeout(function () {
 			searchTerm = searchEl.value.trim();
-			applyFilters();
+			const resultCount = applyFilters();
+			scheduleSearchReport(resultCount);
 		}, 150);
 	});
 
 	typeFilterEl.addEventListener("change", function () {
+		const previousTypeFilter = typeFilter;
 		typeFilter = typeFilterEl.value;
-		applyFilters();
+		const resultCount = applyFilters();
+
+		PokeDex.analytics.track("pokedex_type_filter_applied", {
+			typeFilter: typeFilter || "all",
+			previousTypeFilter: previousTypeFilter || "all",
+			resultCount: resultCount,
+			totalCount: pokemon.length,
+			searchTerm: searchTerm,
+			page: PokeDex.analytics.currentPage(),
+		});
 	});
 
 	retryBtn.addEventListener("click", load);

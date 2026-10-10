@@ -44,6 +44,10 @@
 		},
 	};
 
+	// Sign-in requests sent from this page load, and how many of them failed.
+	let attemptCount = 0;
+	let failedAttemptCount = 0;
+
 	/* --- error rendering --------------------------------------------------- */
 
 	function showFieldError(field, message) {
@@ -110,6 +114,45 @@
 		}
 	}
 
+	/* --- analytics --------------------------------------------------------- */
+
+	// Which fields failed and the messages shown, never what was typed.
+	function trackValidationFailed() {
+		const invalidFields = Object.keys(FIELDS).filter(function (name) {
+			return FIELDS[name].input.getAttribute("aria-invalid") === "true";
+		});
+
+		PokeDex.analytics.track("sign_in_validation_failed", {
+			invalidFields: invalidFields,
+			errorMessages: invalidFields.map(function (name) {
+				return FIELDS[name].error.textContent;
+			}),
+		});
+	}
+
+	function trackSignInFailed(failureReason, errorMessage) {
+		failedAttemptCount++;
+		PokeDex.analytics.track("sign_in_failed", {
+			failureReason: failureReason,
+			errorMessage: errorMessage,
+			remember: rememberInput.checked,
+			attemptNumber: attemptCount,
+		});
+	}
+
+	// Identifies first, so the event is attributed to the user who just
+	// signed in rather than the anonymous visitor on this page.
+	function trackSignInSucceeded(user, redirectTarget) {
+		PokeDex.analytics.identify(user);
+		PokeDex.analytics.track("sign_in_succeeded", {
+			role: user.role,
+			remember: rememberInput.checked,
+			redirectTarget: redirectTarget,
+			hasNextParam: new URLSearchParams(global.location.search).has("next"),
+			failedAttemptCount: failedAttemptCount,
+		});
+	}
+
 	/* --- events ------------------------------------------------------------ */
 
 	Object.keys(FIELDS).forEach(function (name) {
@@ -140,12 +183,14 @@
 		clearFormError();
 
 		if (!validateAll()) {
+			trackValidationFailed();
 			const firstInvalid = form.querySelector('[aria-invalid="true"]');
 			if (firstInvalid) firstInvalid.focus();
 			return;
 		}
 
 		setBusy(true);
+		attemptCount++;
 
 		try {
 			const result = await PokeDex.auth.signIn(
@@ -155,6 +200,7 @@
 			);
 
 			if (!result.ok) {
+				trackSignInFailed("invalid_credentials", result.error);
 				setBusy(false);
 				showFormError(result.error);
 				passwordInput.value = "";
@@ -162,14 +208,18 @@
 				return;
 			}
 
+			// Tracked first: the redirect leaves the page immediately.
+			const redirectTarget = PokeDex.auth.getRedirectTarget();
+			trackSignInSucceeded(result.user || {}, redirectTarget);
 			// Identify at the moment of sign-in; later pages re-identify from
 			// the stored session (see analytics.js).
 			if (PokeDex.analytics) PokeDex.analytics.identify(result.user);
 
 			// Replace rather than assign: the login page shouldn't sit in the
 			// back-stack once the visitor is through it.
-			global.location.replace(PokeDex.auth.getRedirectTarget());
+			global.location.replace(redirectTarget);
 		} catch (err) {
+			trackSignInFailed("unexpected_error", err && err.message);
 			setBusy(false);
 			showFormError("Something went wrong signing you in. Please try again.");
 		}
