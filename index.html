@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>PokeDex</title>
+	<meta name="description" content="Browse the original 151 Pokémon.">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://pokeapi.co">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="js/demo-users.js"></script>
+	<script src="js/auth.js"></script>
+	<script>
+		// Guard runs before any content paints. Flip PROTECTED to false to
+		// make the Pokédex public (see README.md).
+		var PROTECTED = true;
+		if (PROTECTED) window.PokeDex.auth.requireAuth();
+	</script>
+</head>
+<body>
+	<header data-site-header></header>
+
+	<main class="page">
+		<div class="page-heading">
+			<div class="page-heading__title">
+				<h1>Pokédex</h1>
+			</div>
+			<p class="page-heading__sub">The original 151. Select one for its stats.</p>
+		</div>
+
+		<div class="toolbar">
+			<div class="field toolbar__search">
+				<label class="field__label" for="search">Search</label>
+				<input class="input" id="search" type="search" placeholder="Name or number…" autocomplete="off">
+			</div>
+
+			<div class="field toolbar__filter">
+				<label class="field__label" for="typeFilter">Type</label>
+				<select class="select" id="typeFilter">
+					<option value="">All types</option>
+				</select>
+			</div>
+
+			<p class="toolbar__count" id="resultCount" aria-live="polite"></p>
+		</div>
+
+		<ul class="poke-grid" id="pokeList"></ul>
+
+		<div class="state hidden" id="emptyState">
+			<h2 class="state__title">No matches</h2>
+			<p>Nothing lines up with that search. Try a different name or number.</p>
+		</div>
+
+		<div class="state hidden" id="errorState">
+			<h2 class="state__title">Couldn't load the Pokédex</h2>
+			<p id="errorMessage">The PokéAPI request failed.</p>
+			<button class="btn" id="retryBtn" type="button">Try again</button>
+		</div>
+	</main>
+
+	<footer class="site-footer">
+		Data from <a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokéAPI</a>.
+	</footer>
+
+	<script src="js/nav.js"></script>
+	<script src="js/pokedex.js"></script>
+</body>
+</html>

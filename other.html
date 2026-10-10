@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Other Page · PokeDex</title>
+
+	<!-- Google Tag Manager -->
+	<!--<script>
+		window.dataLayer = window.dataLayer || [];
+		window.dataLayer.push({"user_id":"headGTM","newLayer":"true"});
+	</script>
+	<script>
+	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NGF57FHZ');</script> -->
+	<!-- End Google Tag Manager -->
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="js/demo-users.js"></script>
+	<script src="js/auth.js"></script>
+</head>
+<body>
+	<!-- Google Tag Manager (noscript)
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NGF57FHZ"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	 End Google Tag Manager (noscript) -->
+
+	<header data-site-header></header>
+
+	<main class="page page--narrow stack">
+		<div class="page-heading">
+			<h1>Other Page</h1>
+			<p class="page-heading__sub">A scratch page for exercising analytics tagging.</p>
+		</div>
+
+		<section class="panel">
+			<h2>Name fields</h2>
+			<div class="form-row">
+				<label class="field__label" for="fname">First name</label>
+				<input class="input" type="text" id="fname" name="fname" placeholder="Your name…">
+			</div>
+			<div class="form-row">
+				<label class="field__label" for="lname">Last name</label>
+				<input class="input" type="text" id="lname" name="lname" placeholder="Your last name…">
+			</div>
+		</section>
+
+		<section class="panel">
+			<h2>Buttons</h2>
+			<p>Targets for click tracking.</p>
+			<div style="display:flex; gap:12px; flex-wrap:wrap;">
+				<button class="btn" id="primaryTestBtn" type="button">Primary action</button>
+				<button class="btn btn--secondary" id="secondaryTestBtn" type="button">Secondary action</button>
+			</div>
+			<p class="field__hint" id="clickResult" aria-live="polite"></p>
+		</section>
+
+		<section class="panel">
+			<h2>Test Form</h2>
+			<p>Resize the window — the label/field columns stack below 600px.</p>
+
+			<form id="testForm">
+				<div class="form-row">
+					<label class="field__label" for="formFirstName">First Name</label>
+					<input class="input" type="text" id="formFirstName" name="firstname" placeholder="Your name…">
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="formLastName">Last Name</label>
+					<input class="input" type="text" id="formLastName" name="lastname" placeholder="Your last name…">
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="country">Country</label>
+					<select class="select" id="country" name="country">
+						<option value="australia">Australia</option>
+						<option value="canada">Canada</option>
+						<option value="usa">USA</option>
+					</select>
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="subject">Subject</label>
+					<textarea class="textarea" id="subject" name="subject" placeholder="Write something…"></textarea>
+				</div>
+				<button class="btn" type="submit" id="btn">Submit</button>
+			</form>
+
+			<p class="alert alert--success hidden" id="formSubmitted" role="status">
+				Form submitted (no network request — this is a test page).
+			</p>
+		</section>
+	</main>
+
+	<script src="js/nav.js"></script>
+	<script>
+		(function () {
+			"use strict";
+
+			var result = document.getElementById("clickResult");
+
+			document.getElementById("primaryTestBtn").addEventListener("click", function () {
+				result.textContent = "Primary action clicked at " + new Date().toLocaleTimeString();
+			});
+
+			document.getElementById("secondaryTestBtn").addEventListener("click", function () {
+				result.textContent = "Secondary action clicked at " + new Date().toLocaleTimeString();
+			});
+
+			document.getElementById("testForm").addEventListener("submit", function (event) {
+				event.preventDefault();
+				document.getElementById("formSubmitted").classList.remove("hidden");
+			});
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Segment Test · PokeDex</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script>
+		// Random account identity, so each page load groups into a different company.
+		function getRandomName(coNames) {
+			const randomIndex = Math.floor(Math.random() * coNames.length);
+			return coNames[randomIndex];
+		}
+
+		const coNames = ["zachCo", "bobCo", "cCo", "segmentCo", "frankCo", "googleCo", "friendsCo", "hudlCo", "pokeCo"];
+		const randomName = getRandomName(coNames);
+		const monthly_value = Math.floor(Math.random() * (450000 - 100000 + 1)) + 100000;
+
+		console.log(randomName, monthly_value);
+
+		!function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on","addSourceMiddleware","addIntegrationMiddleware","setAnonymousId","addDestinationMiddleware"];analytics.factory=function(e){return function(){var t=Array.prototype.slice.call(arguments);t.unshift(e);analytics.push(t);return analytics}};for(var e=0;e<analytics.methods.length;e++){var key=analytics.methods[e];analytics[key]=analytics.factory(key)}analytics.load=function(key,e){var t=document.createElement("script");t.type="text/javascript";t.async=!0;t.src="https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(t,n);analytics._loadOptions=e};analytics._writeKey="aFb7t75af04AZPWk1zzIqTnbVO5m5DOQ";;analytics.SNIPPET_VERSION="4.15.3";
+		analytics.identify("segmentZach",{"displayName2":"2display","lastLogin":"2025-08-08T00:39:28.688Z"});
+		analytics.group(randomName,{"monthly_value":monthly_value});
+		analytics.load("aFb7t75af04AZPWk1zzIqTnbVO5m5DOQ");
+		analytics.page();
+		}}();
+	</script>
+
+	<script src="js/demo-users.js"></script>
+	<script src="js/auth.js"></script>
+</head>
+<body>
+	<header data-site-header></header>
+
+	<main class="page page--narrow stack">
+		<div class="page-heading">
+			<h1>Segment Test</h1>
+			<p class="page-heading__sub">
+				Identify, group, and page calls fire on load. Account:
+				<strong id="accountName"></strong>
+			</p>
+		</div>
+
+		<section class="panel">
+			<h2>Name fields</h2>
+			<div class="form-row">
+				<label class="field__label" for="fname">First name</label>
+				<input class="input" type="text" id="fname" name="fname" placeholder="Your name…">
+			</div>
+			<div class="form-row">
+				<label class="field__label" for="lname">Last name</label>
+				<input class="input" type="text" id="lname" name="lname" placeholder="Your last name…">
+			</div>
+		</section>
+
+		<section class="panel">
+			<h2>Track events</h2>
+			<p>Each button sends a <code>track</code> call with a small property payload.</p>
+			<div style="display:flex; gap:12px; flex-wrap:wrap;">
+				<button class="btn" id="trackPrimary" type="button">Primary action</button>
+				<button class="btn btn--secondary" id="trackSecondary" type="button">Secondary action</button>
+			</div>
+			<p class="field__hint" id="trackResult" aria-live="polite"></p>
+		</section>
+
+		<section class="panel">
+			<h2>Test Form</h2>
+			<p>Resize the window — the label/field columns stack below 600px.</p>
+
+			<form id="testForm">
+				<div class="form-row">
+					<label class="field__label" for="formFirstName">First Name</label>
+					<input class="input" type="text" id="formFirstName" name="firstname" placeholder="Your name…">
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="formLastName">Last Name</label>
+					<input class="input" type="text" id="formLastName" name="lastname" placeholder="Your last name…">
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="country">Country</label>
+					<select class="select" id="country" name="country">
+						<option value="australia">Australia</option>
+						<option value="canada">Canada</option>
+						<option value="usa">USA</option>
+					</select>
+				</div>
+				<div class="form-row">
+					<label class="field__label" for="subject">Subject</label>
+					<textarea class="textarea" id="subject" name="subject" placeholder="Write something…"></textarea>
+				</div>
+				<button class="btn" type="submit">Submit</button>
+			</form>
+
+			<p class="alert alert--success hidden" id="formSubmitted" role="status">
+				Form submitted — <code>formSubmittedSegment</code> tracked.
+			</p>
+		</section>
+	</main>
+
+	<script src="js/nav.js"></script>
+	<script>
+		(function () {
+			"use strict";
+
+			document.getElementById("accountName").textContent = randomName;
+
+			var result = document.getElementById("trackResult");
+
+			function track(event, properties) {
+				window.analytics.track(event, properties);
+				result.textContent = "Tracked “" + event + "” at " + new Date().toLocaleTimeString();
+			}
+
+			document.getElementById("trackPrimary").addEventListener("click", function () {
+				track("otherBtnSegment", { color: "blue", number: 1, testArray: ["array1", "array3", "array2"] });
+			});
+
+			document.getElementById("trackSecondary").addEventListener("click", function () {
+				track("secondaryBtnSegment", { color: "grey", number: 2 });
+			});
+
+			document.getElementById("testForm").addEventListener("submit", function (event) {
+				event.preventDefault();
+				track("formSubmittedSegment", { country: document.getElementById("country").value });
+				document.getElementById("formSubmitted").classList.remove("hidden");
+			});
+		})();
+	</script>
+</body>
+</html>

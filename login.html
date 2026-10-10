@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Sign in · PokeDex</title>
+	<meta name="description" content="Sign in to the PokeDex.">
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="js/demo-users.js"></script>
+	<script src="js/auth.js"></script>
+	<script>
+		// Bounce an already-signed-in visitor before the form paints.
+		window.PokeDex.auth.redirectIfAuthenticated();
+	</script>
+</head>
+<body>
+	<header data-site-header></header>
+
+	<main class="auth">
+		<div class="auth__card">
+			<div class="auth__header">
+				<div class="auth__mark" aria-hidden="true"></div>
+				<h1>Welcome back</h1>
+				<p>Sign in to browse the Pokédex.</p>
+			</div>
+
+			<!-- Form-level errors (bad credentials, network) land here. -->
+			<div id="formError" class="alert alert--error hidden" role="alert"></div>
+
+			<form id="loginForm" novalidate>
+				<div class="field">
+					<label class="field__label" for="email">Email address</label>
+					<input
+						class="input"
+						id="email"
+						name="email"
+						type="email"
+						autocomplete="username"
+						placeholder="you@example.com"
+						aria-describedby="emailError"
+						required>
+					<span class="field__error hidden" id="emailError"></span>
+				</div>
+
+				<div class="field">
+					<label class="field__label" for="password">Password</label>
+					<div class="input-group">
+						<input
+							class="input"
+							id="password"
+							name="password"
+							type="password"
+							autocomplete="current-password"
+							placeholder="••••••••"
+							aria-describedby="passwordError"
+							required>
+						<button class="input-group__action" id="togglePassword" type="button" aria-pressed="false">
+							Show
+						</button>
+					</div>
+					<span class="field__error hidden" id="passwordError"></span>
+				</div>
+
+				<div class="field">
+					<label class="checkbox">
+						<input type="checkbox" id="remember" name="remember">
+						<span>Keep me signed in on this device</span>
+					</label>
+				</div>
+
+				<button class="btn btn--block" id="submitBtn" type="submit">
+					<span id="submitLabel">Sign in</span>
+				</button>
+			</form>
+
+			<p class="auth__demo" id="demoHint"></p>
+
+			<p class="auth__footer">
+				Demo authentication — credentials are checked in the browser and provide no real security.
+			</p>
+		</div>
+	</main>
+
+	<script src="js/nav.js"></script>
+	<script src="js/login.js"></script>
+</body>
+</html>
