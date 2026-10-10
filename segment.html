@@ -32,6 +32,7 @@
 	</script>
 
 	<script src="js/demo-users.js"></script>
+	<script src="js/analytics.js"></script>
 	<script src="js/auth.js"></script>
 </head>
 <body>
@@ -111,8 +112,21 @@
 
 			var result = document.getElementById("trackResult");
 
+			// How many of the form's fields hold a value. The values themselves
+			// are free text and stay out of analytics.
+			function countCompletedFields(form) {
+				var count = 0;
+				new FormData(form).forEach(function (value) {
+					if (String(value).trim()) count++;
+				});
+				return count;
+			}
+
+			// Each call goes to Segment and, with the same payload, to Pendo, so
+			// the two tools can be compared side by side.
 			function track(event, properties) {
 				window.analytics.track(event, properties);
+				window.PokeDex.analytics.track(event, properties);
 				result.textContent = "Tracked “" + event + "” at " + new Date().toLocaleTimeString();
 			}
 
@@ -126,7 +140,11 @@
 
 			document.getElementById("testForm").addEventListener("submit", function (event) {
 				event.preventDefault();
-				track("formSubmittedSegment", { country: document.getElementById("country").value });
+				track("formSubmittedSegment", {
+					country: document.getElementById("country").value,
+					fieldsCompleted: countCompletedFields(event.currentTarget),
+					accountName: randomName,
+				});
 				document.getElementById("formSubmitted").classList.remove("hidden");
 			});
 		})();
