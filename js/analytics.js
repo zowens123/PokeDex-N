@@ -1,13 +1,10 @@
 /* ==========================================================================
-   analytics.js — Pendo Track Events
+   analytics.js — Novus by Pendo: boot, identify, Track Events, sign-out reset
    --------------------------------------------------------------------------
-   The one place that talks to the Pendo agent. Load it before auth.js on
-   every page. Each call is a no-op when the agent isn't on the page, and
-   none of them throw: analytics must never break the flow it measures.
+   The one place that talks to the Pendo agent. Load it once per page, after
+   auth.js. Each call is a no-op when the agent isn't on the page, and none
+   of them throw: analytics must never break the flow it measures.
 
-   Event properties never include passwords, email addresses, or names.
-   analytics.js — Novus by Pendo: boot, identify, and sign-out reset
-   --------------------------------------------------------------------------
    The Pendo install snippet in each page's <head> defines a `pendo` stub
    that queues calls while the agent loads asynchronously. Every page here
    is a full page load, so this runs once per page: it boots the agent, then
@@ -16,6 +13,8 @@
 
    The agent is always reached through `global.pendo` at call time, never a
    cached reference: its stub methods are swapped out once the agent loads.
+
+   Event properties never include passwords, email addresses, or names.
    ========================================================================== */
 
 (function (global) {
@@ -60,16 +59,42 @@
 
 	/**
 	 * Attributes what follows to the signed-in user rather than the anonymous
-	 * visitor. Keyed by email, the only unique field on the user object.
+	 * visitor. The session user has no separate id, and email is the login
+	 * key, so it doubles as the visitor id.
 	 */
 	function identify(user) {
 		const pendo = global.pendo;
 		if (!pendo || typeof pendo.identify !== "function" || !user || !user.email) return;
 
 		try {
-			pendo.identify({ visitor: { id: user.email } });
+			pendo.identify({
+				visitor: {
+					id: user.email,
+					email: user.email,
+					full_name: user.name,
+					role: user.role,
+				},
+			});
 		} catch (err) {
 			global.console.warn("Pendo identify failed:", err);
+		}
+	}
+
+	/**
+	 * Starts a fresh anonymous visitor, so whoever signs in next isn't
+	 * recorded under the previous user's identity.
+	 */
+	function clearSession() {
+		// The snippet doesn't stub clearSession: it only exists once the agent
+		// has loaded, and never if a content blocker stopped it. Sign-out must
+		// work either way.
+		const pendo = global.pendo;
+		if (pendo && typeof pendo.clearSession === "function") {
+			try {
+				pendo.clearSession();
+			} catch (err) {
+				global.console.warn("Pendo clearSession failed:", err);
+			}
 		}
 	}
 
@@ -156,43 +181,12 @@
 		track: track,
 		trackWhenReady: trackWhenReady,
 		identify: identify,
+		clearSession: clearSession,
 		currentPage: currentPage,
 	};
 
 	// Send anything an earlier page in this tab left pending.
 	flushPending(0);
-	/**
-	 * The session user has no separate id, and email is the login key, so it
-	 * doubles as the visitor id.
-	 */
-	function identify(user) {
-		if (!global.pendo || !user || !user.email) return;
-
-		global.pendo.identify({
-			visitor: {
-				id: user.email,
-				email: user.email,
-				full_name: user.name,
-				role: user.role,
-			},
-		});
-	}
-
-	/**
-	 * Starts a fresh anonymous visitor, so whoever signs in next isn't
-	 * recorded under the previous user's identity.
-	 */
-	function clearSession() {
-		// The snippet doesn't stub clearSession: it only exists once the agent
-		// has loaded, and never if a content blocker stopped it. Sign-out must
-		// work either way.
-		if (global.pendo && typeof global.pendo.clearSession === "function") {
-			global.pendo.clearSession();
-		}
-	}
-
-	PokeDex.analytics = { identify: identify, clearSession: clearSession };
-
 	if (!global.pendo) return;
 
 	// Exactly once per page load. An empty id lets the agent resume the
