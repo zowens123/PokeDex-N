@@ -11,26 +11,21 @@
 	const form = doc.getElementById("loginForm");
 	if (!form) return;
 
-	const emailInput = doc.getElementById("email");
+	const usernameInput = doc.getElementById("username");
 	const passwordInput = doc.getElementById("password");
 	const rememberInput = doc.getElementById("remember");
 	const submitBtn = doc.getElementById("submitBtn");
 	const submitLabel = doc.getElementById("submitLabel");
 	const formError = doc.getElementById("formError");
 	const toggleBtn = doc.getElementById("togglePassword");
-	const demoHint = doc.getElementById("demoHint");
 
-	// Intentionally permissive: the server is the real authority on whether an
-	// address exists. This only catches obvious typos.
-	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+	// Any handle works — an email, a name, a tag. Only emptiness is an error.
 	const FIELDS = {
-		email: {
-			input: emailInput,
-			error: doc.getElementById("emailError"),
+		username: {
+			input: usernameInput,
+			error: doc.getElementById("usernameError"),
 			validate: function (value) {
-				if (!value) return "Enter your email address.";
-				if (!EMAIL_PATTERN.test(value)) return "Enter a valid email address.";
+				if (!value) return "Enter a username.";
 				return null;
 			},
 		},
@@ -194,7 +189,7 @@
 
 		try {
 			const result = await PokeDex.auth.signIn(
-				emailInput.value.trim(),
+				usernameInput.value.trim(),
 				passwordInput.value,
 				rememberInput.checked
 			);
@@ -225,17 +220,5 @@
 		}
 	});
 
-	/* --- demo credential hint ---------------------------------------------- */
-
-	if (demoHint && PokeDex.DEMO_HINT) {
-		demoHint.innerHTML =
-			"<strong>Demo account</strong> — " +
-			"<code>" +
-			PokeDex.DEMO_HINT.email +
-			"</code> / <code>" +
-			PokeDex.DEMO_HINT.password +
-			"</code>";
-	}
-
-	emailInput.focus();
+	usernameInput.focus();
 })(window);

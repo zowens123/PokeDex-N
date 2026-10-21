@@ -59,17 +59,18 @@
 
 	/**
 	 * Attributes what follows to the signed-in user rather than the anonymous
-	 * visitor. The session user has no separate id, and email is the login
-	 * key, so it doubles as the visitor id.
+	 * visitor. The username is the login key, so it is the visitor id; email
+	 * is only present when the username was one.
 	 */
 	function identify(user) {
 		const pendo = global.pendo;
-		if (!pendo || typeof pendo.identify !== "function" || !user || !user.email) return;
+		const id = user && (user.id || user.email);
+		if (!pendo || typeof pendo.identify !== "function" || !id) return;
 
 		try {
 			pendo.identify({
 				visitor: {
-					id: user.email,
+					id: id,
 					email: user.email,
 					full_name: user.name,
 					role: user.role,

@@ -1,10 +1,11 @@
 /* ==========================================================================
    auth.js — session handling + route guards
    --------------------------------------------------------------------------
-   Client-side demo auth. The credential check happens in the browser against
-   demo-users.js, which means it provides ZERO real security — anyone can read
-   the source or edit storage. It exists so the login flow (validation, error
-   states, sessions, guarded pages, sign-out) is real and testable.
+   Open demo auth. There are no accounts: any non-empty username and password
+   are accepted, and the username becomes the visitor's identity. That gives
+   ZERO real security — it exists so the login flow (validation, sessions,
+   guarded pages, sign-out, analytics identify) is real and testable, and so
+   each sign-in can be a distinct visitor for analytics work.
 
    To make it real, replace the body of `signIn` with a call to your API and
    let the server set an httpOnly cookie. Nothing else here needs to change.
@@ -104,29 +105,41 @@
 
 	/* --- credential check -------------------------------------------------- */
 
-	function normalizeEmail(email) {
-		return String(email || "").trim().toLowerCase();
+	const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+	// "ash.ketchum" → "Ash Ketchum"; "misty@cerulean.gym" → "Misty".
+	function displayName(handle) {
+		const local = handle.split("@")[0];
+		const words = local
+			.split(/[.\-_+\s]+/)
+			.filter(Boolean)
+			.map(function (part) {
+				return part.charAt(0).toUpperCase() + part.slice(1);
+			});
+		return words.join(" ") || handle;
 	}
 
-	// Stand-in for a network round trip, so callers get realistic async
-	// behavior (and the submit button's loading state is actually visible).
-	function lookupDemoUser(email, password) {
-		const users = PokeDex.DEMO_USERS || [];
-		const target = normalizeEmail(email);
+	// Accepts anything non-empty. The delay stands in for a network round
+	// trip, so the submit button's loading state is actually visible and the
+	// flow behaves like one with a real backend.
+	function acceptCredentials(username, password) {
+		const handle = String(username || "").trim();
 
 		return new Promise(function (resolve) {
 			global.setTimeout(function () {
-				const match = users.find(function (user) {
-					return normalizeEmail(user.email) === target && user.password === password;
-				});
-
-				if (!match) {
+				if (!handle || !password) {
 					resolve(null);
 					return;
 				}
 
-				// Never carry the password into the session object.
-				resolve({ email: match.email, name: match.name, role: match.role });
+				// Never carry the password into the session object. `email` is
+				// only set when the handle looks like one; JSON drops undefined.
+				resolve({
+					id: handle.toLowerCase(),
+					email: EMAIL_PATTERN.test(handle) ? handle.toLowerCase() : undefined,
+					name: displayName(handle),
+					role: "Trainer",
+				});
 			}, 450);
 		});
 	}
@@ -154,17 +167,17 @@
 		 *     method: "POST",
 		 *     headers: { "Content-Type": "application/json" },
 		 *     credentials: "include",
-		 *     body: JSON.stringify({ email, password }),
+		 *     body: JSON.stringify({ username, password }),
 		 *   });
-		 *   if (!res.ok) return { ok: false, error: "Invalid email or password." };
+		 *   if (!res.ok) return { ok: false, error: "Invalid username or password." };
 		 *   return { ok: true, user: await res.json() };
 		 */
-		signIn: async function (email, password, remember) {
-			const user = await lookupDemoUser(email, password);
+		signIn: async function (username, password, remember) {
+			const user = await acceptCredentials(username, password);
 
 			if (!user) {
-				// Deliberately vague: don't reveal which field was wrong.
-				return { ok: false, error: "Invalid email or password." };
+				// Only reachable if the form's own validation was bypassed.
+				return { ok: false, error: "Enter a username and password." };
 			}
 
 			writeSession(user, Boolean(remember));

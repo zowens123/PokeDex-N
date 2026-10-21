@@ -23,7 +23,6 @@
 </script>
 	<!-- End Novus by Pendo -->
 
-	<script src="js/demo-users.js"></script>
 	<script src="js/auth.js"></script>
 	<script src="js/analytics.js"></script>
 	<script>
@@ -47,17 +46,19 @@
 
 			<form id="loginForm" novalidate>
 				<div class="field">
-					<label class="field__label" for="email">Email address</label>
+					<label class="field__label" for="username">Username</label>
 					<input
 						class="input"
-						id="email"
-						name="email"
-						type="email"
+						id="username"
+						name="username"
+						type="text"
 						autocomplete="username"
-						placeholder="you@example.com"
-						aria-describedby="emailError"
+						autocapitalize="none"
+						spellcheck="false"
+						placeholder="ash.ketchum"
+						aria-describedby="usernameError"
 						required>
-					<span class="field__error hidden" id="emailError"></span>
+					<span class="field__error hidden" id="usernameError"></span>
 				</div>
 
 				<div class="field">
@@ -91,10 +92,8 @@
 				</button>
 			</form>
 
-			<p class="auth__demo" id="demoHint"></p>
-
 			<p class="auth__footer">
-				Demo authentication — credentials are checked in the browser and provide no real security.
+				Demo sign-in — any username and password works. Nothing is verified, and nothing leaves this browser.
 			</p>
 		</div>
 	</main>

@@ -26,10 +26,8 @@ segment.html    Scratch page — Segment analytics snippet
 test.html       Pokédex + New Relic browser agent (public)
 
 css/style.css   Design system: tokens, primitives, components
-js/analytics.js Pendo Track Events (no-ops when the agent isn't loaded)
-js/analytics.js Novus by Pendo: boot, identify, and sign-out reset
+js/analytics.js Novus by Pendo: boot, identify, Track Events, sign-out reset
 js/auth.js      Session handling and route guards
-js/demo-users.js Demo credential seed (development only)
 js/login.js     Login form validation and submission
 js/nav.js       Shared site header, rendered on every page
 js/pokedex.js   List, search, filter, and detail dialog
@@ -37,12 +35,12 @@ js/pokedex.js   List, search, filter, and detail dialog
 
 ## Authentication
 
-**The current login is a demo and provides no real security.** Credentials are
-checked in the browser against `js/demo-users.js`, which anyone can read. It
-exists so the surrounding flow — validation, error states, sessions, guarded
-pages, sign-out — is real and testable.
-
-Demo credentials are listed in `js/demo-users.js` and shown on the login page.
+**The login is open and provides no real security.** There are no accounts:
+any non-empty username and password sign you in. The username becomes the
+session identity (and the Pendo visitor id), with a display name derived from
+it — `ash.ketchum` shows as *Ash Ketchum*. It exists so the surrounding flow —
+validation, error states, sessions, guarded pages, sign-out, analytics
+identify — is real and testable, and so each sign-in can be a distinct visitor.
 
 Sessions are stored in `sessionStorage` by default, or `localStorage` when
 "Keep me signed in" is checked, and expire after 12 hours.
@@ -52,22 +50,21 @@ Sessions are stored in `sessionStorage` by default, or `localStorage` when
 Replace the body of `signIn` in `js/auth.js` with a call to your API:
 
 ```js
-signIn: async function (email, password, remember) {
+signIn: async function (username, password, remember) {
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username, password }),
   });
 
-  if (!res.ok) return { ok: false, error: "Invalid email or password." };
+  if (!res.ok) return { ok: false, error: "Invalid username or password." };
   return { ok: true, user: await res.json() };
 }
 ```
 
-Then delete `js/demo-users.js` and its `<script>` tags, and let the server set
-an httpOnly session cookie. The guards (`requireAuth`, `redirectIfAuthenticated`)
-and the login page need no changes.
+Let the server set an httpOnly session cookie. The guards (`requireAuth`,
+`redirectIfAuthenticated`) and the login page need no changes.
 
 Note that client-side guards are a UX affordance, not a security boundary — the
 server must still authorize every request.
