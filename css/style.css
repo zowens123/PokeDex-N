@@ -378,6 +378,16 @@ code {
 	text-decoration: none;
 }
 
+/* Inert nav items are <button>s; strip the UA button chrome so they sit
+   flush with the links. */
+button.site-nav__link {
+	border: none;
+	background-color: transparent;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
 .site-nav__link[aria-current="page"] {
 	color: var(--accent);
 	background-color: var(--accent-soft);

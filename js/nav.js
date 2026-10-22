@@ -12,11 +12,14 @@
 	const PokeDex = (global.PokeDex = global.PokeDex || {});
 	const doc = global.document;
 
+	// An entry without `href` renders as an inert button: it goes nowhere on
+	// its own and exists as a stable target for a guide or resource center.
 	const LINKS = [
 		{ href: "index.html", label: "Pokédex" },
 		{ href: "other.html", label: "Other Page" },
 		{ href: "segment.html", label: "Segment Test" },
 		{ href: "test.html", label: "Sandbox" },
+		{ id: "nav-help", label: "Help" },
 	];
 
 	function currentPage() {
@@ -53,6 +56,14 @@
 		nav.setAttribute("aria-label", "Main");
 
 		LINKS.forEach(function (link) {
+			if (!link.href) {
+				const button = el("button", "site-nav__link", link.label);
+				button.type = "button";
+				button.id = link.id;
+				nav.appendChild(button);
+				return;
+			}
+
 			const a = el("a", "site-nav__link", link.label);
 			a.href = link.href;
 			if (link.href === page) a.setAttribute("aria-current", "page");
